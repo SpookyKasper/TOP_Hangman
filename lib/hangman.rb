@@ -16,10 +16,11 @@ class Hangman
   DICTIONARY = File.open('words', 'r')
   WANTED_LENGTH_WORDS = DICTIONARY.readlines.select {|word| word.chomp.length > 4 && word.chomp.length < 13}
 
-  attr_accessor :secret_word
+  attr_accessor :guesses_left
+  attr_reader :secret_word
 
   def initialize(guesses)
-    @guesses = guesses
+    @guesses_left = guesses
     @secret_word = WANTED_LENGTH_WORDS.sample.chomp
     @coded_array = []
     @right_letters = []
@@ -27,11 +28,9 @@ class Hangman
     @current_letter = nil
   end
 
-  def display_guesses_left
-    puts "You can still make #{@guesses} incorrect guesses before the game ends"
-  end
-
-  def display_coded_word
+  def display
+    puts "You can still make #{@guesses_left} incorrect guesses before the game ends"
+    puts "The letters you guesses that are not in the secret word are #{@wrong_letters}"
     puts "The secret word is #{@coded_array.join}"
   end
 
@@ -49,6 +48,7 @@ class Hangman
       @right_letters << @current_letter
     else
       @wrong_letters << @current_letter
+      @guesses_left -= 1
     end
   end
 
@@ -63,15 +63,13 @@ end
 
 
 game = Hangman.new(3)
-
-p game.secret_word
 game.code_secret_word
-game.display_coded_word
-game.display_guesses_left
 
-game.get_user_input
-game.deal_with_input_letters
-game.update_coded_array
-game.display_guesses_left
-game.display_coded_word
+while game.guesses_left > 0
+  p game.secret_word
+  game.display
+  game.get_user_input
+  game.deal_with_input_letters
+  game.update_coded_array
+end
 
