@@ -31,7 +31,8 @@ class Hangman
   def display
     puts "You can still make #{@guesses_left} incorrect guesses before the game ends"
     puts "The letters you guesses that are not in the secret word are #{@wrong_letters}"
-    puts "The secret word is #{@coded_array.join}"
+    puts "The secret word is"
+    puts  @coded_array.join
   end
 
   def code_secret_word
@@ -59,13 +60,17 @@ class Hangman
       end
     end
   end
+
+  def victory
+    @coded_array.join.gsub(/\W+/, '') == @secret_word
+  end
 end
 
 
 game = Hangman.new(3)
 game.code_secret_word
 
-while game.guesses_left > 0
+until game.guesses_left == 0 || game.victory
   p game.secret_word
   game.display
   game.get_user_input
