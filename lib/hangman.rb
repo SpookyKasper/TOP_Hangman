@@ -27,26 +27,19 @@ class Hangman
 
   def display
     puts
-    puts "You can still make #{@guesses_left} incorrect guesses before the game ends"
-    puts "The letters you guessed that are NOT in the secret word are: #{@wrong_letters}"
     puts "The secret word is"
     puts  @coded_array.join
+    puts "The letters you guessed that are NOT in the secret word are: #{@wrong_letters}"
+    puts "You can still make #{@guesses_left} incorrect guesses before the game ends"
     puts
   end
 
   def deal_with_user_input
     puts "Please type a letter"
     current_letter = gets.chomp.downcase
-    @secret_word.include?(current_letter) ? @right_letters << current_letter : @wrong_letters << current_letter and @guesses_left -=1
-  end
-
-  def deal_with_input_letters
-    if @secret_word.include?(@current_letter)
-      @right_letters << @current_letter
-    else
-      @wrong_letters << @current_letter
-      @guesses_left -= 1
-    end
+    @secret_word.include?(current_letter) ?
+    @right_letters << current_letter && right_letter_message :
+    @wrong_letters << current_letter && wrong_letter_message && @guesses_left -=1
   end
 
   def update_coded_array
@@ -61,6 +54,14 @@ class Hangman
     @coded_array.join.gsub(/\W+/, '') == @secret_word
   end
 
+  def right_letter_message
+    puts "Nice! That letter is present in the secred word!"
+  end
+
+  def wrong_letter_message
+    puts "Ooh too bad that letter is not present secret code :("
+  end
+
   def victory_message
     puts "Congratulations you cracked the secret word before being Hanged!"
   end
@@ -69,13 +70,26 @@ class Hangman
     puts "Too bad you just got hanged before cracking the secret word :("
   end
 
+  def end_of_game_message
+    puts
+    victory ? victory_message : defeat_message
+    puts @coded_array.join
+  end
+
   def guess
-    until guesses_left == 0 || victory
-      p @secret_word
-      display
-      deal_with_user_input
-      update_coded_array
-    end
+    p @secret_word
+    deal_with_user_input
+    update_coded_array
+  end
+
+  def save
+    now = Time.new
+    File.open("saved_games/#{now}", 'w') {|f| f.write(to_yaml)}
+    puts "Your game has just been saved!"
+  end
+
+  def guess_or_save(choice)
+    choice == 'guess' ? guess : save
   end
 
   def to_yaml
@@ -85,8 +99,7 @@ class Hangman
       :coded_array => @coded_array,
       :right_letters => @right_letters,
       :wrong_letters => @wrong_letters,
-      :current_letter => @current_letter
-    })
+      })
   end
 
   def self.from_yaml(string)
@@ -101,13 +114,16 @@ words_with_wanted_length = dictionary.readlines.select {|word| word.chomp.length
 secret_word = words_with_wanted_length.sample.chomp
 coded_array = secret_word.split('').map { |letter| '_ ' }
 
-game = Hangman.new(2, secret_word, coded_array, Array.new(), Array.new())
+game = Hangman.new(3, secret_word, coded_array, Array.new(), Array.new())
 
-puts "Do you want to make a guess or save the game ?"
-choice = gets.chomp
-choice == 'guess' ? game.guess : game.to_yaml
+Dir.mkdir("saved_games") unless File.exists?("saved_games")
 
 
-puts
-game.victory ? game.victory_message : game.defeat_message
-p game.coded_array.join
+until game.guesses_left == 0 || game.victory
+  game.display
+  puts "Do you want to make a guess or save the game ?"
+  choice = gets.chomp
+  game.guess_or_save(choice)
+end
+
+game.end_of_game_message
