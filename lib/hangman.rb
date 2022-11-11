@@ -51,6 +51,33 @@ class Hangman
     @coded_array.join.gsub(/\W+/, '') == @secret_word
   end
 
+  def guess
+    p @secret_word
+    deal_with_user_input
+    update_coded_array
+  end
+
+  def save
+    puts 'Under which name should we store your game ?'
+    name = gets.chomp
+    now = Time.new
+    File.open("saved_games/#{name}.yml", 'w') {|f| f.write(to_yaml)}
+    puts "Your game has just been saved under #{name}"
+  end
+
+  def guess_or_save(choice)
+    choice == 'guess' ? guess : save
+  end
+
+  def game_loop
+    until guesses_left == 0 || victory?
+      display
+      puts "Do you want to make a guess or save the game ?"
+      choice = gets.chomp
+      guess_or_save(choice)
+    end
+  end
+
   def right_letter_message
     puts "Nice! That letter is present in the secred word!"
   end
@@ -73,24 +100,6 @@ class Hangman
     puts @coded_array.join
   end
 
-  def guess
-    p @secret_word
-    deal_with_user_input
-    update_coded_array
-  end
-
-  def save
-    puts 'Under which name should we store your game ?'
-    name = gets.chomp
-    now = Time.new
-    File.open("saved_games/#{name}.yml", 'w') {|f| f.write(to_yaml)}
-    puts "Your game has just been saved under #{name}"
-  end
-
-  def guess_or_save(choice)
-    choice == 'guess' ? guess : save
-  end
-
   def to_yaml
     YAML.dump ({
       :guesses_left => @guesses_left,
@@ -106,6 +115,29 @@ class Hangman
     p data
     self.new(data[:guesses_left], data[:secret_word], data[:coded_array], data[:right_letters], data[:wrong_letters])
   end
+
+  def self.load_game
+    puts "Which game you want to load?"
+    name = gets.chomp
+    stored = File.open("saved_games/#{name}.yml")
+    Hangman.from_yaml(stored)
+  end
+
+  def self.load_or_new?
+    puts "Start from scratch or load?"
+    gets.chomp
+  end
+
+  def self.start_fresh_or_load(choice)
+    if choice == 'new'
+      self.new(5, secret_word, coded_array, Array.new(), Array.new())
+    elsif choice == 'old'
+      self.load_game
+    else
+      puts "that doesn't seem right"
+    end
+  end
+
 end
 
 # New Game Variables
@@ -117,27 +149,8 @@ coded_array = secret_word.split('').map { |letter| '_ ' }
 # Create a saved games folder
 Dir.mkdir("saved_games") unless File.exists?("saved_games")
 
-# Stored or new game ?
-puts "Start from scratch or load?"
-choice = gets.chomp
-if choice == 'new'
-  game = Hangman.new(5, secret_word, coded_array, Array.new(), Array.new())
-elsif choice == 'old'
-  puts "Which game you want to load?"
-  name = gets.chomp
-  stored = File.open("saved_games/#{name}.yml")
-  game = Hangman.from_yaml(stored)
-else
-  puts "that doesn't seem right"
-end
 
-# game_loop
-until game.guesses_left == 0 || game.victory?
-  p game.guesses_left
-  game.display
-  puts "Do you want to make a guess or save the game ?"
-  choice = gets.chomp
-  game.guess_or_save(choice)
-end
-
+choice = Hangman.load_or_new?
+game = Hangman.start_fresh_or_load(choice)
+game.game_loop
 game.end_of_game_message
