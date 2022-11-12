@@ -8,6 +8,9 @@ class Hangman
   attr_accessor :guesses_left
   attr_reader :secret_word, :coded_array
 
+  DICTIONARY = File.open('words', 'r')
+  WORDS_WITH_DESIRED_LENGTH = DICTIONARY.readlines.select {|word| word.chomp.length > 4 && word.chomp.length < 13}
+
   def initialize(guesses_left, secret_word, coded_array, right_letters, wrong_letters)
     @guesses_left = guesses_left
     @secret_word = secret_word
@@ -34,7 +37,6 @@ class Hangman
     else
       @wrong_letters << current_letter
       wrong_letter_message
-      p @guesses_left
       @guesses_left -= 1
     end
   end
@@ -58,6 +60,7 @@ class Hangman
   end
 
   def save
+    Dir.mkdir("saved_games") unless File.exists?("saved_games")
     puts 'Under which name should we store your game ?'
     name = gets.chomp
     now = Time.new
@@ -123,6 +126,12 @@ class Hangman
     Hangman.from_yaml(stored)
   end
 
+  def self.create_new_game
+    secret_word = WORDS_WITH_DESIRED_LENGTH.sample.chomp
+    coded_array = secret_word.split('').map { |letter| '_ ' }
+    self.new(12, secret_word, coded_array, Array.new(), Array.new())
+  end
+
   def self.load_or_new?
     puts "Start from scratch or load?"
     gets.chomp
@@ -130,7 +139,7 @@ class Hangman
 
   def self.start_fresh_or_load(choice)
     if choice == 'new'
-      self.new(5, secret_word, coded_array, Array.new(), Array.new())
+      self.create_new_game
     elsif choice == 'old'
       self.load_game
     else
@@ -138,19 +147,12 @@ class Hangman
     end
   end
 
+  def self.play
+    choice = self.load_or_new?
+    game = self.start_fresh_or_load(choice)
+    game.game_loop
+    game.end_of_game_message
+  end
 end
 
-# New Game Variables
-dictionary = File.open('words', 'r')
-words_with_wanted_length = dictionary.readlines.select {|word| word.chomp.length > 4 && word.chomp.length < 13}
-secret_word = words_with_wanted_length.sample.chomp
-coded_array = secret_word.split('').map { |letter| '_ ' }
-
-# Create a saved games folder
-Dir.mkdir("saved_games") unless File.exists?("saved_games")
-
-
-choice = Hangman.load_or_new?
-game = Hangman.start_fresh_or_load(choice)
-game.game_loop
-game.end_of_game_message
+Hangman.play
