@@ -20,15 +20,6 @@ class Hangman
     @current_letter = nil
   end
 
-  def display
-    puts
-    puts "The secret word is"
-    puts  @coded_array.join
-    puts "The letters you guessed that are NOT in the secret word are: #{@wrong_letters}"
-    puts "You can still make #{@guesses_left} incorrect guesses before the game ends"
-    puts
-  end
-
   def deal_with_user_input
     puts "Please type a letter"
     current_letter = gets.chomp.downcase
@@ -68,17 +59,37 @@ class Hangman
     puts "Your game has just been saved under #{name}"
   end
 
-  def guess_or_save(choice)
-    choice == 'guess' ? guess : save
+  def guess_or_save
+    choice = nil
+    puts "Do you want to make a guess or save the game ?"
+    puts "Please type 'g' to guess and 's' to save"
+    until choice == 'g' || choice == 's'
+      choice = gets.chomp
+      if choice == 'g' then guess
+      elsif choice == 's' then save
+      else
+        puts "Something seems wrong with your input, Please type 'g' or 's'"
+      end
+    end
   end
 
   def game_loop
     until guesses_left == 0 || victory?
       display
-      puts "Do you want to make a guess or save the game ?"
-      choice = gets.chomp
-      guess_or_save(choice)
+      guess_or_save
     end
+  end
+
+  # Player Display and messages
+
+  def display
+    puts
+    puts "The secret word is"
+    puts @coded_array.join
+    puts
+    puts "The letters you guessed that are NOT in the secret word are:#{@wrong_letters}"
+    puts "You can still make #{@guesses_left} incorrect guesses before the game ends"
+    puts
   end
 
   def right_letter_message
@@ -103,6 +114,8 @@ class Hangman
     puts @coded_array.join
   end
 
+  # Serialize / Deserialize Methods
+
   def to_yaml
     YAML.dump ({
       :guesses_left => @guesses_left,
@@ -119,12 +132,7 @@ class Hangman
     self.new(data[:guesses_left], data[:secret_word], data[:coded_array], data[:right_letters], data[:wrong_letters])
   end
 
-  def self.load_game
-    puts "Which game you want to load?"
-    name = gets.chomp
-    stored = File.open("saved_games/#{name}.yml")
-    Hangman.from_yaml(stored)
-  end
+  # CLASS METHODS
 
   def self.create_new_game
     secret_word = WORDS_WITH_DESIRED_LENGTH.sample.chomp
@@ -132,8 +140,18 @@ class Hangman
     self.new(12, secret_word, coded_array, Array.new(), Array.new())
   end
 
+  def self.load_game
+    puts "Which game you want to load?"
+    name = gets.chomp
+    stored = File.open("saved_games/#{name}.yml")
+    Hangman.from_yaml(stored)
+  end
+
   def self.load_or_new?
-    puts "Start from scratch or load?"
+    puts
+    puts "Do you want to start from scratch or load a saved game?"
+    puts "Please type 'new' if you want to strat from scratch"
+    puts "Please type 'old' if you want to load a saved game"
     gets.chomp
   end
 
