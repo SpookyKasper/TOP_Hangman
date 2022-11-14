@@ -17,17 +17,23 @@ class Hangman
     @coded_array = coded_array
     @right_letters = []
     @wrong_letters = []
-    @current_letter = nil
+  end
+
+  def letter_guess_loop
+    while 1
+      puts "Please type a letter"
+      letter = gets.chomp.downcase
+      return letter unless @right_letters.include?(letter) || @wrong_letters.include?(letter)
+      puts "You already guessed that letter hehe, check the secret word and the wrong letter before guessing ;)"
+    end
   end
 
   def deal_with_user_input
-    puts "Please type a letter"
-    current_letter = gets.chomp.downcase
-    if @secret_word.include?(current_letter)
-      @right_letters << current_letter && right_letter_message
+    letter = letter_guess_loop
+    if @secret_word.include?(letter)
+      @right_letters << letter && right_letter_message
     else
-      @wrong_letters << current_letter
-      wrong_letter_message
+      @wrong_letters << letter && wrong_letter_message
       @guesses_left -= 1
     end
   end
@@ -54,8 +60,8 @@ class Hangman
     Dir.mkdir("saved_games") unless File.exists?("saved_games")
     puts 'Under which name should we store your game ?'
     name = gets.chomp
-    now = Time.new
-    File.open("saved_games/#{name}.yml", 'w') {|f| f.write(to_yaml)}
+    now = Time.new.strftime('%d %B %Y %H:%M')
+    File.open("saved_games/#{name}(#{now}).yml", 'w') {|f| f.write(to_yaml)}
     puts "Your game has just been saved under #{name}"
   end
 
@@ -65,12 +71,10 @@ class Hangman
     puts "Please type 'g' to guess and 's' to save"
     until choice == 'g' || choice == 's'
       choice = gets.chomp
-      if choice == 'g' then guess
-      elsif choice == 's' then save
-      else
-        puts "Something seems wrong with your input, Please type 'g' or 's'"
-      end
+      next if choice == 'g' || choice == 's'
+      puts "Something seems wrong with your input, Please type 'g' or 's'"
     end
+    choice == 'g' ? guess : save
   end
 
   def game_loop
@@ -133,7 +137,6 @@ class Hangman
   end
 
   # CLASS METHODS
-
   def self.create_new_game
     secret_word = WORDS_WITH_DESIRED_LENGTH.sample.chomp
     coded_array = secret_word.split('').map { |letter| '_ ' }
@@ -142,6 +145,7 @@ class Hangman
 
   def self.load_game
     puts "Which game you want to load?"
+    puts Dir['saved_games/*'].basename
     name = gets.chomp
     stored = File.open("saved_games/#{name}.yml")
     Hangman.from_yaml(stored)
@@ -166,8 +170,12 @@ class Hangman
   end
 
   def self.play
-    choice = self.load_or_new?
-    game = self.start_fresh_or_load(choice)
+    if Dir.exists?('saved_games')
+      choice = self.load_or_new?
+      game = self.start_fresh_or_load(choice)
+    else
+      game = self.start_fresh_or_load('new')
+    end
     game.game_loop
     game.end_of_game_message
   end
