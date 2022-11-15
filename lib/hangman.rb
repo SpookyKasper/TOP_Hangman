@@ -114,12 +114,16 @@ class Hangman
   def victory_message
     puts
     puts "Congratulations you cracked the secret word before being Hanged!"
-    puts @coded_array.join.delete(' ')
+    puts
+    puts "'#{@coded_array.join.delete(' ')}' was the secret word indeed!"
+    puts
   end
 
   def defeat_message
     puts "Too bad you just got hanged before cracking the secret word :("
-    puts @coded_array.join
+    puts
+    puts "This was your result so far #{@coded_array.join}"
+    puts
   end
 
   def end_game_message
@@ -194,8 +198,11 @@ end
 while 1
   Hangman.play
   puts "Do you want to play again ?"
-  puts "Please type 'yes' or 'no' depending on your choice"
   answer = gets.chomp
+  until answer == 'yes' || answer == 'no'
+    puts "Please type 'yes' or 'no' depending on your choice"
+    answer = gets.chomp
+  end
   next if answer == 'yes'
   return if answer == 'no'
 end
