@@ -1,6 +1,7 @@
 require 'open-uri'
 require 'yaml'
 
+puts
 puts "Hangman Initialized"
 
 class Hangman
@@ -15,16 +16,17 @@ class Hangman
     @guesses_left = guesses_left
     @secret_word = secret_word
     @coded_array = coded_array
-    @right_letters = []
-    @wrong_letters = []
+    @right_letters = right_letters
+    @wrong_letters = wrong_letters
   end
 
   def letter_guess_loop
     while 1
       puts "Please type a letter"
       letter = gets.chomp.downcase
+      next unless ('a'..'z').to_a.include?(letter)
       return letter unless @right_letters.include?(letter) || @wrong_letters.include?(letter)
-      puts "You already guessed that letter hehe, check the secret word and the wrong letter before guessing ;)"
+      puts "You already guessed that letter hehe, check the secret word and the wrong letters before guessing ;)"
     end
   end
 
@@ -51,7 +53,6 @@ class Hangman
   end
 
   def guess
-    p @secret_word
     deal_with_user_input
     update_coded_array
   end
@@ -60,8 +61,7 @@ class Hangman
     Dir.mkdir("saved_games") unless File.exists?("saved_games")
     puts 'Under which name should we store your game ?'
     name = gets.chomp
-    now = Time.new.strftime('%d %B %Y %H:%M')
-    File.open("saved_games/#{name}(#{now}).yml", 'w') {|f| f.write(to_yaml)}
+    File.open("saved_games/#{name}.yml", 'w') {|f| f.write(to_yaml)}
     puts "Your game has just been saved under #{name}"
   end
 
@@ -97,25 +97,33 @@ class Hangman
   end
 
   def right_letter_message
+    puts
     puts "Nice! That letter is present in the secred word!"
   end
 
   def wrong_letter_message
-    puts "Ooh too bad that letter is not present secret code :("
+    puts
+    puts "Ooh too bad that letter is not present in the secret code :("
+  end
+
+  def not_a_letter_message
+    puts
+    puts "Oh it looks like you didn't typed a letter.. please type a letter"
   end
 
   def victory_message
+    puts
     puts "Congratulations you cracked the secret word before being Hanged!"
+    puts @coded_array.join.delete(' ')
   end
 
   def defeat_message
     puts "Too bad you just got hanged before cracking the secret word :("
+    puts @coded_array.join
   end
 
-  def end_of_game_message
-    puts
+  def end_game_message
     victory? ? victory_message : defeat_message
-    puts @coded_array.join
   end
 
   # Serialize / Deserialize Methods
@@ -132,7 +140,6 @@ class Hangman
 
   def self.from_yaml(string)
     data = YAML.load string
-    p data
     self.new(data[:guesses_left], data[:secret_word], data[:coded_array], data[:right_letters], data[:wrong_letters])
   end
 
@@ -145,16 +152,18 @@ class Hangman
 
   def self.load_game
     puts "Which game you want to load?"
-    puts Dir['saved_games/*'].basename
+    puts "Here are your saved games:"
+    puts Dir.chdir('saved_games') {Dir.glob('*')}
     name = gets.chomp
-    stored = File.open("saved_games/#{name}.yml")
+    stored = File.open("saved_games/#{name}")
     Hangman.from_yaml(stored)
   end
 
   def self.load_or_new?
     puts
     puts "Do you want to start from scratch or load a saved game?"
-    puts "Please type 'new' if you want to strat from scratch"
+    puts
+    puts "Please type 'new' if you want to start from scratch"
     puts "Please type 'old' if you want to load a saved game"
     gets.chomp
   end
@@ -177,8 +186,16 @@ class Hangman
       game = self.start_fresh_or_load('new')
     end
     game.game_loop
-    game.end_of_game_message
+    game.end_game_message
   end
 end
 
-Hangman.play
+
+while 1
+  Hangman.play
+  puts "Do you want to play again ?"
+  puts "Please type 'yes' or 'no' depending on your choice"
+  answer = gets.chomp
+  next if answer == 'yes'
+  return if answer == 'no'
+end
