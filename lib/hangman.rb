@@ -169,7 +169,12 @@ class Hangman
     puts
     puts "Please type 'new' if you want to start from scratch"
     puts "Please type 'old' if you want to load a saved game"
-    gets.chomp
+    answer = gets.chomp
+    until answer == 'new' || answer == 'old'
+      puts "Please type 'new' or 'old' (withouth the quotes)"
+      answer = gets.chomp
+    end
+    answer
   end
 
   def self.start_fresh_or_load(choice)
