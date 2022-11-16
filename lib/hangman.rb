@@ -1,8 +1,9 @@
 require 'open-uri'
 require 'yaml'
+require 'colorize'
 
 puts
-puts "Hangman Initialized"
+puts "Hangman Initialized".light_white
 
 class Hangman
 
@@ -22,11 +23,12 @@ class Hangman
 
   def letter_guess_loop
     while 1
-      puts "Please type a letter"
+      puts "Please type a letter".light_yellow
       letter = gets.chomp.downcase
       next unless ('a'..'z').to_a.include?(letter)
       return letter unless @right_letters.include?(letter) || @wrong_letters.include?(letter)
-      puts "You already guessed that letter hehe, check the secret word and the wrong letters before guessing ;)"
+      puts "You already guessed that letter!"
+      puts "check the secret word and the wrong letters before guessing ;)".light_magenta
     end
   end
 
@@ -62,17 +64,17 @@ class Hangman
     puts 'Under which name should we store your game ?'
     name = gets.chomp
     File.open("saved_games/#{name}.yml", 'w') {|f| f.write(to_yaml)}
-    puts "Your game has just been saved under #{name}"
+    puts "Your game has just been saved under #{name}".light_yellow
   end
 
   def guess_or_save
     choice = nil
-    puts "Do you want to make a guess or save the game ?"
-    puts "Please type 'g' to guess and 's' to save"
+    puts "Do you want to make a guess or save the game ?".light_cyan
+    puts "Please type 'g' to guess and 's' to save".light_yellow
     until choice == 'g' || choice == 's'
       choice = gets.chomp
       next if choice == 'g' || choice == 's'
-      puts "Something seems wrong with your input, Please type 'g' or 's'"
+      puts "Something seems wrong with your input, Please type 'g' or 's'".red
     end
     choice == 'g' ? guess : save
   end
@@ -88,41 +90,36 @@ class Hangman
 
   def display
     puts
-    puts "The secret word is"
-    puts @coded_array.join
+    puts "The secret word is".light_white
+    puts @coded_array.join.light_white
     puts
-    puts "The letters you guessed that are NOT in the secret word are:#{@wrong_letters}"
-    puts "You can still make #{@guesses_left} incorrect guesses before the game ends"
+    puts "The letters you guessed that are NOT in the secret word are:" + "#{@wrong_letters}".light_magenta unless @wrong_letters.empty?
+    puts "You can still make " + "#{@guesses_left}".red  + " incorrect guesses before the game ends"
     puts
   end
 
   def right_letter_message
     puts
-    puts "Nice! That letter is present in the secred word!"
+    puts "Nice! That letter is present in the secred word!".green
   end
 
   def wrong_letter_message
     puts
-    puts "Ooh too bad that letter is not present in the secret code :("
-  end
-
-  def not_a_letter_message
-    puts
-    puts "Oh it looks like you didn't typed a letter.. please type a letter"
+    puts "Ooh too bad that letter is not present in the secret code :(".magenta
   end
 
   def victory_message
     puts
-    puts "Congratulations you cracked the secret word before being Hanged!"
+    puts "Congratulations you cracked the secret word before being Hanged!".green
     puts
-    puts "'#{@coded_array.join.delete(' ')}' was the secret word indeed!"
+    puts "'#{@coded_array.join.delete(' ')}' was the secret word indeed!".green
     puts
   end
 
   def defeat_message
-    puts "Too bad you just got hanged before cracking the secret word :("
+    puts "Too bad you just got hanged before cracking the secret word :(".magenta
     puts
-    puts "This was your result so far #{@coded_array.join}"
+    puts "This was your result so far #{@coded_array.join}".magenta
     puts
   end
 
@@ -149,42 +146,43 @@ class Hangman
 
   # CLASS METHODS
   def self.create_new_game
+    puts
+    puts "Let's Start a new game then!".light_white
     secret_word = WORDS_WITH_DESIRED_LENGTH.sample.chomp
     coded_array = secret_word.split('').map { |letter| '_ ' }
     self.new(12, secret_word, coded_array, Array.new(), Array.new())
   end
 
   def self.load_game
-    puts "Which game you want to load?"
-    puts "Here are your saved games:"
+    puts
+    puts "Here are your saved games:".light_yellow
     puts Dir.chdir('saved_games') {Dir.glob('*')}
+    puts
+    puts "Which game you want to load?".light_cyan
     name = gets.chomp
+    until File.exists?("saved_games/#{name}")
+      puts "Please type an existing saved game".light_yellow
+      name = gets.chomp
+    end
     stored = File.open("saved_games/#{name}")
     Hangman.from_yaml(stored)
   end
 
   def self.load_or_new?
     puts
-    puts "Do you want to start from scratch or load a saved game?"
-    puts
-    puts "Please type 'new' if you want to start from scratch"
-    puts "Please type 'old' if you want to load a saved game"
+    puts "Do you want to start from scratch or load a saved game?".light_cyan
+    puts "Please type 'new' if you want to start from scratch".light_yellow
+    puts "Please type 'old' if you want to load a saved game".light_yellow
     answer = gets.chomp
     until answer == 'new' || answer == 'old'
-      puts "Please type 'new' or 'old' (withouth the quotes)"
+      puts "Please type 'new' or 'old' (withouth the quotes)".light_magenta
       answer = gets.chomp
     end
     answer
   end
 
   def self.start_fresh_or_load(choice)
-    if choice == 'new'
-      self.create_new_game
-    elsif choice == 'old'
-      self.load_game
-    else
-      puts "that doesn't seem right"
-    end
+    choice == 'new' ? self.create_new_game : self.load_game
   end
 
   def self.play
@@ -205,7 +203,7 @@ while 1
   puts "Do you want to play again ?"
   answer = gets.chomp
   until answer == 'yes' || answer == 'no'
-    puts "Please type 'yes' or 'no' depending on your choice"
+    puts "Please type 'yes' or 'no' depending on your choice".light_yellow
     answer = gets.chomp
   end
   next if answer == 'yes'
