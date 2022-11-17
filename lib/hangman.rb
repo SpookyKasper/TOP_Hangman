@@ -64,11 +64,6 @@ class Hangman
     puts "Your game has just been saved under #{name}".light_yellow
   end
 
-  # Algo guess or save
-  # Ask the user to type a letter or type save
-  # Repeat the question until answer fits the question
-  # aplly guess or save method depending on the answer
-
   def guess_or_save
     puts 'Do you want to make a guess or save the game ?'.light_cyan
     puts "Please type a letter to guess or 'save' to save the game".light_yellow
@@ -88,7 +83,6 @@ class Hangman
   end
 
   # Player Display and messages
-
   def display
     puts
     puts 'The secret word is'.light_white
@@ -130,7 +124,6 @@ class Hangman
   end
 
   # Serialize / Deserialize Methods
-
   def to_yaml
     YAML.dump({
                 guesses_left: @guesses_left,
@@ -197,6 +190,8 @@ class Hangman
     game.end_game_message
   end
 end
+
+# Game Loop
 
 loop do
   Hangman.play
