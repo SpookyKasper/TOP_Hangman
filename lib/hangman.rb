@@ -20,20 +20,19 @@ class Hangman
     @wrong_letters = wrong_letters
   end
 
-  def letter_guess_loop
-    while 1
-      puts 'Please type a letter'.light_yellow
-      letter = gets.chomp.downcase
-      next unless ('a'..'z').to_a.include?(letter)
+  def letter_guess_loop(letter)
+    loop do
       return letter unless @right_letters.include?(letter) || @wrong_letters.include?(letter)
 
       puts 'You already guessed that letter!'.red
       puts 'check the secret word and the wrong letters before guessing ;)'.red
+      puts 'Please input a new letter:'.light_yellow
+      letter = gets.chomp.downcase
     end
   end
 
-  def deal_with_user_input
-    letter = letter_guess_loop
+  def deal_with_user_input(letter)
+    letter = letter_guess_loop(letter)
     if @secret_word.include?(letter)
       @right_letters << letter && right_letter_message
     else
@@ -52,8 +51,8 @@ class Hangman
     @coded_array.join.gsub(/\W+/, '') == @secret_word
   end
 
-  def guess
-    deal_with_user_input
+  def guess(letter)
+    deal_with_user_input(letter)
     update_coded_array
   end
 
@@ -65,17 +64,20 @@ class Hangman
     puts "Your game has just been saved under #{name}".light_yellow
   end
 
-  def guess_or_save
-    choice = nil
-    puts 'Do you want to make a guess or save the game ?'.light_cyan
-    puts "Please type 'g' to guess and 's' to save".light_yellow
-    until %w[g s].include?(choice)
-      choice = gets.chomp
-      next if %w[g s].include?(choice)
+  # Algo guess or save
+  # Ask the user to type a letter or type save
+  # Repeat the question until answer fits the question
+  # aplly guess or save method depending on the answer
 
-      puts "Something seems wrong with your input, Please type 'g' or 's'".red
+  def guess_or_save
+    puts 'Do you want to make a guess or save the game ?'.light_cyan
+    puts "Please type a letter to guess or 'save' to save the game".light_yellow
+    choice = gets.chomp.downcase
+    until choice.match?(/[a-z]/) || choice == 'save'
+      puts "Something seems wrong with your input, Please type a single letter or 'save'".red
+      choice = gets.chomp.downcase
     end
-    choice == 'g' ? guess : save
+    choice == 'save' ? save : guess(choice)
   end
 
   def game_loop
@@ -91,20 +93,20 @@ class Hangman
     puts
     puts 'The secret word is'.light_white
     puts @coded_array.join.light_white
-    puts
     unless @wrong_letters.empty?
-      puts 'The letters you guessed that are NOT in the secret word are:' + "#{@wrong_letters}".light_magenta
+      puts
+      puts 'The letters you guessed that are NOT in the secret word are:'.light_white
+      puts @wrong_letters.to_s.light_magenta
     end
-    puts 'You can still make ' + "#{@guesses_left}".red + ' incorrect guesses before the game ends'
+    puts
+    puts "You can still make #{@guesses_left.to_s.red} incorrect guesses before the game ends"
   end
 
   def right_letter_message
-    puts
     puts 'Nice! That letter is present in the secred word!'.green
   end
 
   def wrong_letter_message
-    puts
     puts 'Unfortunately that letter is not present in the secret code :('.magenta
   end
 
@@ -119,7 +121,7 @@ class Hangman
   def defeat_message
     puts 'Too bad you just got hanged before cracking the secret word :('.magenta
     puts
-    puts "This was your result so far #{@coded_array.join}".magenta
+    puts "This was your result so far: #{@coded_array.join}".magenta
     puts
   end
 
@@ -147,7 +149,7 @@ class Hangman
   # CLASS METHODS
   def self.create_new_game
     puts
-    puts "Let's start a new game then!".light_white
+    puts "Let's start a new game!".light_white
     secret_word = WORDS_WITH_DESIRED_LENGTH.sample.chomp
     coded_array = secret_word.split('').map { |_letter| '_ ' }
     new(12, secret_word, coded_array, [], [])
@@ -196,14 +198,13 @@ class Hangman
   end
 end
 
-while 1
+loop do
   Hangman.play
   puts 'Do you want to play again ?'
-  answer = gets.chomp
+  answer = gets.chomp.downcase
   until %w[yes no].include?(answer)
     puts "Please type 'yes' or 'no' depending on your choice".light_yellow
     answer = gets.chomp
   end
-  next if answer == 'yes'
-  return if answer == 'no'
+  answer == 'yes' ? next : return
 end
